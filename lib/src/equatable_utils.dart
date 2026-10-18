@@ -35,6 +35,15 @@ bool setEquals(Set<Object?> a, Set<Object?> b) {
   if (identical(a, b)) return true;
   if (a.length != b.length) return false;
   for (final element in a) {
+    // Fast path: a hash lookup finds the matching element in O(1) for most
+    // sets. It is only a shortcut: a miss, or a match that is `==` but not
+    // `objectsEquals` (a collection with a custom `==`), falls back to the
+    // scan.
+    final match = b.lookup(element);
+    if ((match != null || b.contains(element)) &&
+        objectsEquals(element, match)) {
+      continue;
+    }
     if (!b.any((e) => objectsEquals(element, e))) return false;
   }
   return true;
